@@ -1,0 +1,109 @@
+import sqlite3
+import random
+import os
+import sys
+
+DB_NAME = "nice_nasty.db"
+
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
+
+def get_connection():
+    return sqlite3.connect(DB_NAME)
+
+def get_random_quote():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT text FROM quotes")
+    quotes = cursor.fetchall()
+    conn.close()
+
+    if not quotes:
+        return "No quotes found in the database."
+    return random.choice(quotes)[0]
+
+def list_quotes():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, text FROM quotes")
+    rows = cursor.fetchall()
+    conn.close()
+
+    if not rows:
+        print("\nNo quotes available.\n")
+        return
+
+    print("\n--- All Quotes ---")
+    for qid, text in rows:
+        print(f"{qid}. {text}")
+    print()
+
+def add_quote():
+    new_quote = input("\nEnter the new quote:\n> ").strip()
+    if not new_quote:
+        print("Quote cannot be empty.")
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO quotes (text) VALUES (?)", (new_quote,))
+    conn.commit()
+    conn.close()
+
+    print("\nQuote added successfully!\n")
+
+def delete_quote():
+    list_quotes()
+    try:
+        qid = int(input("Enter the ID of the quote to delete:\n> "))
+    except ValueError:
+        print("Invalid input.")
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM quotes WHERE id = ?", (qid,))
+    conn.commit()
+    conn.close()
+
+    print("\nQuote deleted (if it existed).\n")
+
+def main_menu():
+    while True:
+        clear_screen()
+        print("=== Nice/Nasty Quote Generator ===")
+        print("1. Get a random quote")
+        print("2. List all quotes")
+        print("3. Add a new quote")
+        print("4. Delete a quote")
+        print("5. Exit")
+
+        choice = input("\nChoose an option:\n> ").strip()
+
+        if choice == "1":
+            clear_screen()
+            print("\nRandom Quote:\n")
+            print(get_random_quote())
+            input("\nPress Enter to return to menu...")
+        elif choice == "2":
+            clear_screen()
+            list_quotes()
+            input("Press Enter to return to menu...")
+        elif choice == "3":
+            clear_screen()
+            add_quote()
+            input("Press Enter to return to menu...")
+        elif choice == "4":
+            clear_screen()
+            delete_quote()
+            input("Press Enter to return to menu...")
+        elif choice == "5":
+            clear_screen()
+            print("Goodbye!")
+            sys.exit()
+        else:
+            print("Invalid choice.")
+            input("Press Enter to continue...")
+
+if __name__ == "__main__":
+    main_menu()
