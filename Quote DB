@@ -1,0 +1,80 @@
+import sqlite3
+
+# All quotes stored in a Python list
+quotes = [
+    "Wisdom is really chasing you, and boy you are just fast.",
+    "I honestly don’t have the time nor the crayons to explain this to you",
+    "Don’t let my knowledge of this topic get in the way of your confidence",
+    "I swear you really light up room when you leave",
+    "I really envy the people that haven’t met you",
+    "You have such BIG emotions for such a little guy",
+    "Great job at raising your voice, but not the knowledge in your argument",
+    "I can explain it to you, but I promise I can’t understand it for you",
+    "The bar was already on the ground, but it seems like you’ve brought a shovel",
+    "I would agree with you, but then we’d both be wrong",
+    "I’m minding my business and you’re also minding my business, then who’s minding yours?",
+    "I don’t really care what everyone says about you. I like you.",
+    "As an outsider, what is your view on intelligence?",
+    "I lowered my standards for you, and you still couldn’t reach them",
+    "Do you have any plants? I would love to know if you’re replacing the oxygen you’re wasting",
+    "What you lack in ability, you really make up for in confidence",
+    "I’m curious, does your brain work like this every day?",
+    "Please remember this conversation is no longer among equals",
+    "I can tell we aren’t educationally compatible to carry on this conversation",
+    "You’re really being yourself today, huh?",
+    "You have a special way of speaking that makes people really appreciate your silence",
+    "You look like you’re trying really hard and I can say we all see it.",
+    "It must be nice to not have to think critically about things",
+    "I admire the way you waste time",
+    "Working with you is like working alone, but harder",
+    "I can see I triggered your true personality to come out",
+    "If my boundaries bother you, that says more about you than it does me",
+    "You have such a talent for talking so much without saying anything",
+    "We would be much better strangers",
+    "It’s ok hun, I get that you’re underdeveloped",
+    "You have the confidence of a much taller person",
+    "Did that make you feel like bigger person?",
+    "It’s okay that you’re wasting my time. I’ve learned to listen when you say something important, and yet I am still waiting",
+    "I can tell you wasted a lot of time trying to think about this",
+    "I am not here to match your disrespect, I’m just here to show you where it ends",
+    "You don’t have the capacity, and that’s just who you are",
+    "We never really know what hell looks like, but with you, we know what it feels like",
+    "I hope you have the day you deserve",
+    "Did it hurt for you to think that hard?",
+    "I really appreciate your confidence to say that out loud",
+    "Oh, so you really do behave like a man",
+    "Your confidence to share your opinion out loud is admirable",
+    "You’re not used to people holding you accountable. That isn’t my problem",
+    "I bet you wash your car in the rain",
+    "You’re the reason why the power rangers had to yell out their colors",
+    "I’m so glad intelligence isn’t currency. Because then you’d be broke",
+    "I sympathize for your lack of knowledge. Being uneducated can be bliss sometimes",
+    "Oh, it’s ok, I never expected you to understand",
+    "Wow! Did you think about that all by yourself?",
+    "You have a face that belongs on the radio",
+    "Your behavior really does suit your own standards",
+    "I would come to your level, but I’ve never been that small before",
+    "I’m glad my expectations are always a little bit lower when it comes to you",
+    "You must have a lot of embarrassing moments in your life",
+    "I’m sorry you didn’t get enough attention at home",
+    "I can draw a picture for you if it makes it easier for you to understand",
+    "After speaking with you, I really value silence"
+]
+
+# Create database and insert quotes
+conn = sqlite3.connect("nice_nasty.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS quotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT NOT NULL
+)
+""")
+
+cursor.executemany("INSERT INTO quotes (text) VALUES (?)", [(q,) for q in quotes])
+
+conn.commit()
+conn.close()
+
+print("Database created and populated successfully!")
