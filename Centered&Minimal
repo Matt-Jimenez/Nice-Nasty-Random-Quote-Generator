@@ -1,0 +1,306 @@
+import sqlite3
+import random
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+DB_NAME = "nice_nasty.db"
+
+THEMES = {
+    "Solarized Light": {
+        "bg": "#fdf6e3",
+        "fg": "#657b83",
+        "button_bg": "#eee8d5",
+        "button_fg": "#586e75",
+        "frame_bg": "#fdf6e3",
+    },
+    "Solarized Dark": {
+        "bg": "#002b36",
+        "fg": "#839496",
+        "button_bg": "#073642",
+        "button_fg": "#93a1a1",
+        "frame_bg": "#002b36",
+    },
+    "Dracula": {
+        "bg": "#282a36",
+        "fg": "#f8f8f2",
+        "button_bg": "#44475a",
+        "button_fg": "#f8f8f2",
+        "frame_bg": "#282a36",
+    },
+    "Nord": {
+        "bg": "#2e3440",
+        "fg": "#d8dee9",
+        "button_bg": "#3b4252",
+        "button_fg": "#eceff4",
+        "frame_bg": "#2e3440",
+    },
+    "Monokai": {
+        "bg": "#272822",
+        "fg": "#f8f8f2",
+        "button_bg": "#49483e",
+        "button_fg": "#f8f8f2",
+        "frame_bg": "#272822",
+    },
+    "Classic Light": {
+        "bg": "#ffffff",
+        "fg": "#000000",
+        "button_bg": "#e0e0e0",
+        "button_fg": "#000000",
+        "frame_bg": "#ffffff",
+    },
+    "Classic Dark": {
+        "bg": "#1e1e1e",
+        "fg": "#d4d4d4",
+        "button_bg": "#333333",
+        "button_fg": "#ffffff",
+        "frame_bg": "#1e1e1e",
+    },
+}
+
+ACCENTS = {
+    "Blue": "#4da6ff",
+    "Red": "#ff4d4d",
+    "Green": "#4dff88",
+    "Purple": "#b366ff",
+    "Gold": "#ffcc00",
+    "Teal": "#33cccc",
+    "None": None,
+}
+
+
+def get_connection():
+    return sqlite3.connect(DB_NAME)
+
+
+def get_random_quote():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT text FROM quotes")
+    rows = cursor.fetchall()
+    conn.close()
+    if not rows:
+        return "No quotes found in the database."
+    return random.choice(rows)[0]
+
+
+def add_quote_to_db(text):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO quotes (text) VALUES (?)", (text,))
+    conn.commit()
+    conn.close()
+
+
+class QuoteAppCentered:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Nice/Nasty Quote Generator – Centered Layout")
+        self.root.geometry("700x450")
+        self.root.minsize(600, 400)
+
+        self.current_theme = tk.StringVar(value="Dracula")
+        self.current_accent = tk.StringVar(value="None")
+
+        self.build_ui()
+        self.apply_theme()
+
+    def build_ui(self):
+        self.main_frame = tk.Frame(self.root)
+        self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Quote display
+        self.quote_box = tk.Text(
+            self.main_frame,
+            wrap="word",
+            height=8,
+            bd=0,
+            relief="flat",
+            font=("Segoe UI", 12),
+        )
+        self.quote_box.pack(fill="both", expand=True, pady=(0, 15))
+        self.quote_box.config(state="disabled")
+
+        # Buttons frame
+        self.button_frame = tk.Frame(self.main_frame)
+        self.button_frame.pack(pady=(0, 15))
+
+        self.random_button = tk.Button(
+            self.button_frame,
+            text="Get Random Quote",
+            command=self.show_random_quote,
+            width=18,
+            font=("Segoe UI", 10, "bold"),
+        )
+        self.random_button.grid(row=0, column=0, padx=5)
+
+        self.add_button = tk.Button(
+            self.button_frame,
+            text="Add Quote",
+            command=self.open_add_quote_window,
+            width=12,
+            font=("Segoe UI", 10),
+        )
+        self.add_button.grid(row=0, column=1, padx=5)
+
+        # Theme controls frame
+        self.theme_frame = tk.Frame(self.main_frame)
+        self.theme_frame.pack(fill="x", pady=(10, 0))
+
+        tk.Label(self.theme_frame, text="Theme:", font=("Segoe UI", 9)).grid(
+            row=0, column=0, padx=(0, 5), sticky="e"
+        )
+        self.theme_menu = ttk.Combobox(
+            self.theme_frame,
+            textvariable=self.current_theme,
+            values=list(THEMES.keys()),
+            state="readonly",
+            width=18,
+        )
+        self.theme_menu.grid(row=0, column=1, padx=(0, 15), sticky="w")
+        self.theme_menu.bind("<<ComboboxSelected>>", lambda e: self.apply_theme())
+
+        tk.Label(self.theme_frame, text="Accent:", font=("Segoe UI", 9)).grid(
+            row=0, column=2, padx=(0, 5), sticky="e"
+        )
+        self.accent_menu = ttk.Combobox(
+            self.theme_frame,
+            textvariable=self.current_accent,
+            values=list(ACCENTS.keys()),
+            state="readonly",
+            width=12,
+        )
+        self.accent_menu.grid(row=0, column=3, sticky="w")
+        self.accent_menu.bind("<<ComboboxSelected>>", lambda e: self.apply_theme())
+
+    def apply_theme(self):
+        theme = THEMES[self.current_theme.get()]
+        accent = ACCENTS[self.current_accent.get()]
+
+        bg = theme["bg"]
+        fg = theme["fg"]
+        button_bg = theme["button_bg"]
+        button_fg = theme["button_fg"]
+        frame_bg = theme["frame_bg"]
+
+        if accent:
+            button_bg = accent
+
+        # Root and main frame
+        self.root.configure(bg=bg)
+        self.main_frame.configure(bg=frame_bg)
+        self.button_frame.configure(bg=frame_bg)
+        self.theme_frame.configure(bg=frame_bg)
+
+        # Quote box
+        self.quote_box.configure(
+            bg=bg,
+            fg=fg,
+            insertbackground=fg,
+            highlightthickness=1,
+            highlightbackground=accent if accent else button_bg,
+        )
+
+        # Buttons
+        for btn in (self.random_button, self.add_button):
+            btn.configure(
+                bg=button_bg,
+                fg=button_fg,
+                activebackground=button_bg,
+                activeforeground=button_fg,
+                bd=0,
+                relief="flat",
+            )
+
+        # Labels
+        for child in self.theme_frame.winfo_children():
+            if isinstance(child, tk.Label):
+                child.configure(bg=frame_bg, fg=fg)
+
+        # Combobox styling
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure(
+            "TCombobox",
+            fieldbackground=bg,
+            background=button_bg,
+            foreground=fg,
+        )
+
+    def show_random_quote(self):
+        quote = get_random_quote()
+        self.quote_box.config(state="normal")
+        self.quote_box.delete("1.0", "end")
+        self.quote_box.insert("1.0", quote)
+        self.quote_box.config(state="disabled")
+
+    def open_add_quote_window(self):
+        win = tk.Toplevel(self.root)
+        win.title("Add New Quote")
+        win.geometry("500x250")
+        win.transient(self.root)
+        win.grab_set()
+
+        theme = THEMES[self.current_theme.get()]
+        accent = ACCENTS[self.current_accent.get()]
+        bg = theme["bg"]
+        fg = theme["fg"]
+        frame_bg = theme["frame_bg"]
+        button_bg = accent if accent else theme["button_bg"]
+        button_fg = theme["button_fg"]
+
+        win.configure(bg=bg)
+
+        frame = tk.Frame(win, bg=frame_bg)
+        frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        label = tk.Label(
+            frame,
+            text="Enter a new quote:",
+            bg=frame_bg,
+            fg=fg,
+            font=("Segoe UI", 10, "bold"),
+        )
+        label.pack(anchor="w", pady=(0, 5))
+
+        text_box = tk.Text(
+            frame,
+            wrap="word",
+            height=5,
+            bg=bg,
+            fg=fg,
+            font=("Segoe UI", 10),
+            highlightthickness=1,
+            highlightbackground=accent if accent else button_bg,
+        )
+        text_box.pack(fill="both", expand=True, pady=(0, 10))
+
+        def save_quote():
+            content = text_box.get("1.0", "end").strip()
+            if not content:
+                messagebox.showwarning("Empty", "Quote cannot be empty.")
+                return
+            add_quote_to_db(content)
+            messagebox.showinfo("Saved", "Quote added to database.")
+            win.destroy()
+
+        save_btn = tk.Button(
+            frame,
+            text="Save Quote",
+            command=save_quote,
+            bg=button_bg,
+            fg=button_fg,
+            bd=0,
+            relief="flat",
+            font=("Segoe UI", 10, "bold"),
+            width=12,
+        )
+        save_btn.pack(pady=(5, 0))
+
+    def run(self):
+        self.root.mainloop()
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = QuoteAppCentered(root)
+    app.run()
