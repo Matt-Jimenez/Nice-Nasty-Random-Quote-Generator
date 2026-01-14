@@ -1,0 +1,15 @@
+import sqlite3
+import random
+
+def get_random_quote():
+    conn = sqlite3.connect("nice_nasty.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT text FROM quotes")
+    all_quotes = cursor.fetchall()
+
+    conn.close()
+
+    return random.choice(all_quotes)[0]
+
+print(get_random_quote())
